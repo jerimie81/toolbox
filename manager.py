@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import sys
 
@@ -10,10 +11,20 @@ OUTPUT_BIN = "toolbox"
 os.makedirs(TOOLS_DIR, exist_ok=True)
 os.makedirs(BUILD_DIR, exist_ok=True)
 
+NAME_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+def is_valid_tool_name(name):
+    return bool(NAME_PATTERN.match(name))
+
 def create_tool():
     name = input("Enter tool name (e.g., ping): ").strip()
-    if not name.isalnum():
-        print("Invalid name. Alphanumeric only.")
+    if not is_valid_tool_name(name):
+        print("Invalid name. Use letters, numbers, and underscores, starting with a letter or underscore.")
+        return
+
+    path = os.path.join(TOOLS_DIR, f"{name}.c")
+    if os.path.exists(path):
+        print(f"Tool {name} already exists. Aborting to avoid overwrite.")
         return
     
     content = f"""
@@ -23,12 +34,15 @@ int {name}_main(int argc, char **argv) {{
     return 0;
 }}
 """
-    with open(os.path.join(TOOLS_DIR, f"{name}.c"), "w") as f:
+    with open(path, "w") as f:
         f.write(content)
     print(f"Tool {name} created.")
 
 def unload_tool():
     name = input("Enter tool name to remove: ").strip()
+    if not is_valid_tool_name(name):
+        print("Invalid name. Use letters, numbers, and underscores, starting with a letter or underscore.")
+        return
     path = os.path.join(TOOLS_DIR, f"{name}.c")
     if os.path.exists(path):
         os.remove(path)
@@ -38,7 +52,11 @@ def unload_tool():
 
 def construct():
     print("Gathering tools...")
-    tools = [f[:-2] for f in os.listdir(TOOLS_DIR) if f.endswith(".c")]
+    tools = sorted(
+        f[:-2]
+        for f in os.listdir(TOOLS_DIR)
+        if f.endswith(".c") and is_valid_tool_name(f[:-2])
+    )
     
     if not tools:
         print("No tools found. Please 'Load' a tool first.")
@@ -90,6 +108,8 @@ int main(int argc, char **argv) {{
     try:
         subprocess.check_call(cmd)
         print(f"Success! ./{OUTPUT_BIN} created.")
+    except FileNotFoundError:
+        print("Compilation Failed: gcc not found. Please install GCC and ensure it is in your PATH.")
     except subprocess.CalledProcessError:
         print("Compilation Failed.")
 
