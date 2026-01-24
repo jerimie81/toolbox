@@ -1,5 +1,7 @@
 # toolbox
 
+![Python package](https://github.com/jerimie81/toolbox/actions/workflows/python-package.yml/badge.svg)
+
 `toolbox.py` builds a BusyBox-style multicall binary from C modules.
 It bootstraps a venv under `~/.tools/toolbox/venv` and stores tools/build output
 under `~/.tools/toolbox`.
