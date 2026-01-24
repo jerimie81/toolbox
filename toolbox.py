@@ -306,9 +306,13 @@ def menu_select() -> tuple[str, Optional[str]]:
 def cmd_menu():
     while True:
         try:
+            if sys.stdin.isatty():
+                term = os.environ.get("TERM")
+                if not term or term == "dumb":
+                    os.environ["TERM"] = "xterm-256color"
             action, name = menu_select()
-        except Exception:
-            print("TUI unavailable, falling back to basic menu.")
+        except Exception as exc:
+            print(f"TUI unavailable ({exc}), falling back to basic menu.")
             return
 
         if action == "exit":
